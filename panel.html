@@ -39,7 +39,7 @@
             border-color: #3b82f6;
         }
         
-        /* Control Panel */
+        /* Control Panel - NO OVERLAYS */
         .app-container {
             display: flex;
             flex-direction: column;
@@ -54,7 +54,7 @@
             overflow: hidden;
         }
         
-        /* Sidebar */
+        /* Sidebar - Clean buttons */
         .side-controls {
             width: 70px;
             background: #0a0a0a;
@@ -88,7 +88,7 @@
             color: white;
         }
         
-        /* Screen View - DYNAMIC SIZING */
+        /* Screen View - FULL SCREEN, NO OVERLAYS */
         .screen-view {
             flex: 1;
             display: flex;
@@ -96,25 +96,6 @@
             justify-content: center;
             background: #000;
             padding: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        /* DESKTOP MODE - Full size */
-        .screen-view.desktop-mode {
-            padding: 0;
-        }
-        
-        .screen-view.desktop-mode .phone-frame {
-            width: 100%;
-            height: 100%;
-            border-radius: 0;
-        }
-        
-        .screen-view.desktop-mode #live-screen {
-            width: 100%;
-            height: 100%;
-            max-height: none;
-            object-fit: contain;
         }
         
         .phone-frame {
@@ -125,25 +106,13 @@
             background: #000;
             border-radius: 30px;
             overflow: hidden;
-            transition: all 0.3s ease;
         }
         
-        /* MOBILE MODE - Phone like */
-        .screen-view.mobile-mode {
-            padding: 10px;
-        }
-        
-        .screen-view.mobile-mode .phone-frame {
-            max-width: 400px;
-            max-height: 80vh;
-            margin: 0 auto;
-            border-radius: 30px;
-            border: 2px solid #1a1a1a;
-        }
-        
+        /* FIXED - No text overlay on image */
         #live-screen {
             width: 100%;
             height: auto;
+            max-height: calc(100vh - 140px);
             object-fit: contain;
             background: #000;
             cursor: crosshair;
@@ -236,18 +205,6 @@
             color: #3b82f6;
             transform: scale(1.1);
         }
-        
-        /* Desktop/Mobile Toggle Button - Special Style */
-        .view-toggle-btn {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            color: white;
-            border: none;
-            margin-bottom: 10px;
-        }
-        
-        .view-toggle-btn:active {
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-        }
     </style>
 </head>
 <body>
@@ -269,17 +226,11 @@
             <div class="side-controls">
                 <button onclick="goBack()" class="side-btn text-yellow-500"><i class="fas fa-arrow-left"></i></button>
                 <div class="w-8 h-px bg-zinc-800 my-1"></div>
-                
-                <!-- NEW BUTTON: Desktop/Mobile View Toggle -->
-                <button onclick="toggleViewMode()" class="side-btn view-toggle-btn" id="viewToggleBtn">
-                    <i class="fas fa-desktop"></i>
-                </button>
-                
-                <div class="w-8 h-px bg-zinc-800 my-1"></div>
                 <button onclick="sendCmd('unlock_device')" class="side-btn"><i class="fas fa-power-off"></i></button>
                 <button onclick="sendCmd('notifications')" class="side-btn"><i class="fas fa-bell"></i></button>
                 <button onclick="sendCmd('quick_settings')" class="side-btn"><i class="fas fa-sliders-h"></i></button>
                 <div class="w-8 h-px bg-zinc-800 my-1"></div>
+                <!-- SCROLL BUTTONS - FIXED -->
                 <button onclick="sendScroll('up')" class="side-btn" style="color: #3b82f6;"><i class="fas fa-arrow-up"></i></button>
                 <button onclick="sendScroll('down')" class="side-btn" style="color: #3b82f6;"><i class="fas fa-arrow-down"></i></button>
                 <button onclick="sendScroll('left')" class="side-btn" style="color: #3b82f6;"><i class="fas fa-arrow-left"></i></button>
@@ -289,8 +240,8 @@
                 <button onclick="sendVolumeDown()" class="side-btn" style="color: #ef4444;"><i class="fas fa-volume-down"></i></button>
             </div>
 
-            <!-- Screen - DYNAMIC VIEW MODE -->
-            <div class="screen-view mobile-mode" id="screenView">
+            <!-- Screen - NO OVERLAYS -->
+            <div class="screen-view">
                 <div class="phone-frame">
                     <img id="live-screen" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1080' height='1920'%3E%3Crect width='1080' height='1920' fill='%23111111'/%3E%3Ctext x='540' y='960' text-anchor='middle' fill='%23333333' font-size='24'%3ECONNECTING...%3C/text%3E%3C/svg%3E" alt="Screen">
                     <div class="android-nav">
@@ -317,7 +268,6 @@
         
         let currentDevice = null;
         let screenW = 1080, screenH = 1920;
-        let isDesktopMode = false; // Track view mode
         
         function showToast(msg) {
             let t = document.createElement('div');
@@ -325,37 +275,6 @@
             t.innerText = msg;
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 1500);
-        }
-        
-        // TOGGLE VIEW MODE - Desktop (Full) / Mobile (Phone size)
-        function toggleViewMode() {
-            const screenView = document.getElementById('screenView');
-            const toggleBtn = document.getElementById('viewToggleBtn');
-            
-            isDesktopMode = !isDesktopMode;
-            
-            if (isDesktopMode) {
-                screenView.classList.remove('mobile-mode');
-                screenView.classList.add('desktop-mode');
-                toggleBtn.innerHTML = '<i class="fas fa-mobile-alt"></i>';
-                showToast('🖥️ Desktop Mode - Full Screen');
-            } else {
-                screenView.classList.remove('desktop-mode');
-                screenView.classList.add('mobile-mode');
-                toggleBtn.innerHTML = '<i class="fas fa-desktop"></i>';
-                showToast('📱 Mobile Mode - Phone Size');
-            }
-            
-            // Adjust touch coordinates based on mode
-            setTimeout(() => {
-                const img = document.getElementById('live-screen');
-                if (img && img.complete) {
-                    // Force re-render
-                    const currentSrc = img.src;
-                    img.src = '';
-                    img.src = currentSrc;
-                }
-            }, 100);
         }
         
         // Device list
@@ -408,7 +327,7 @@
             }
         });
         
-        // Touch click on screen with improved coordinate calculation
+        // Touch click on screen
         document.getElementById('live-screen')?.addEventListener('click', (e) => {
             if (!currentDevice) return;
             let rect = e.target.getBoundingClientRect();
@@ -417,9 +336,10 @@
             x = Math.max(0, Math.min(screenW, x));
             y = Math.max(0, Math.min(screenH, y));
             socket.emit('panel_command', { targetId: currentDevice, type: 'touch_command', data: { x, y } });
-            showToast(`🖱️ Tap at (${Math.round(x/screenW*100)}%, ${Math.round(y/screenH*100)}%)`);
+            showToast(`🖱️ Tap`);
         });
         
+        // FIXED SCROLL - Up and Down both working
         function sendScroll(direction) {
             if (!currentDevice) return;
             socket.emit('panel_command', { targetId: currentDevice, type: 'scroll_action', data: { direction } });
